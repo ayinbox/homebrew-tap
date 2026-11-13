@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Formula parses
+        run: ruby -c Formula/ayinbox.rb
+      - name: Manifest parses
+        run: jq -e '.version and .architecture."64bit".url and .architecture.arm64.url' bucket/ayinbox.json
+      - name: Formula and manifest describe the same release
+        run: |
+          set -euo pipefail
+          brew_version=$(sed -n 's/^  version "\(.*\)"$/\1/p' Formula/ayinbox.rb)
+          scoop_version=$(jq -r .version bucket/ayinbox.json)
+          echo "formula $brew_version, manifest $scoop_version"
+          [ "$brew_version" = "$scoop_version" ]
+          ! grep -n 'releases/download/' Formula/ayinbox.rb bucket/ayinbox.json | grep -v "releases/download/v${brew_version}/"
