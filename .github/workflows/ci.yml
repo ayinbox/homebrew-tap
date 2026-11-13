@@ -23,4 +23,5 @@ jobs:
           scoop_version=$(jq -r .version bucket/ayinbox.json)
           echo "formula $brew_version, manifest $scoop_version"
           [ "$brew_version" = "$scoop_version" ]
-          ! grep -n 'releases/download/' Formula/ayinbox.rb bucket/ayinbox.json | grep -v "releases/download/v${brew_version}/"
+          # Scoop's autoupdate block templates the tag as v$version; every other URL must name this release.
+          ! grep -n 'releases/download/' Formula/ayinbox.rb bucket/ayinbox.json | grep -vF 'releases/download/v$version/' | grep -v "releases/download/v${brew_version}/"
